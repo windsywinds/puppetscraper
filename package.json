@@ -1,0 +1,14 @@
+{
+  "name": "job scraper",
+  "version": "1.0.0",
+  "description": "Create a job to scrape Workable",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.7.0",
+    "puppeteer": "^22.0.0"
+  }
+}
