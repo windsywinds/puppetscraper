@@ -25,24 +25,19 @@ async function uploadJson(bucket, taskIndex, jobData) {
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   const filename = `${date.toISOString()}-task${taskIndex}.json`;
 
-  // Save data to JSON file
-  fs.writeFile(filename, JSON.stringify(jobData, null, 2), (err) => { // Use the generated filename
-    if (err) throw err;
-    console.log(`Data saved to ${filename}`);
-  });
-
   console.log(`Uploading JSON file as '${filename}'`);
 
+  try {
+    // Upload JSON data to the specified Google Cloud Storage bucket
+    await bucket.file(filename).save(JSON.stringify(jobData, null, 2));
 
-  await bucket.upload(filename, {
-    destination: filename,
-    metadata: {
-      contentType: 'application/json',
-    },
-  });
-
-  console.log(`JSON file '${filename}' uploaded to bucket.`);
+    console.log(`JSON file '${filename}' uploaded to bucket.`);
+  } catch (error) {
+    console.error(`Error uploading JSON file '${filename}' to bucket:`, error);
+    throw error; // Rethrow the error to propagate it further
+  }
 }
+
 
 async function run(urls) {
   console.log(`Passed in urls: ${urls}`);
