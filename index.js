@@ -1,4 +1,3 @@
-const fs = require('fs');
 const puppeteer = require("puppeteer");
 const { Storage } = require("@google-cloud/storage");
 
@@ -39,7 +38,7 @@ async function uploadJson(bucket, taskIndex, jobData) {
 }
 
 
-async function run(urls) {
+async function main(urls) {
   console.log(`Passed in urls: ${urls}`);
 
   const taskIndex = process.env.CLOUD_RUN_TASK_INDEX || 0;
