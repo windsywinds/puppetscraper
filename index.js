@@ -1,3 +1,4 @@
+const fs = require('fs');
 const puppeteer = require("puppeteer");
 const { Storage } = require("@google-cloud/storage");
 
@@ -18,11 +19,13 @@ async function createStorageBucketIfMissing(storage, bucketName) {
   return createdBucket;
 }
 
-async function uploadJson(bucket, taskIndex, jobData) {
+async function uploadJson(bucket, companyName, jobData) {
   // Create filename using the current time and task index
+  //create filename convention
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  const filename = `${date.toISOString()}-task${taskIndex}.json`;
+  const formattedDate = date.toISOString().replace(/:/g, '_');
+  const filename = `${formattedDate}-${companyName}-jobs.json`;
 
   console.log(`Uploading JSON file as '${filename}'`);
 
@@ -37,10 +40,8 @@ async function uploadJson(bucket, taskIndex, jobData) {
   }
 }
 
-
 async function main(urls) {
   console.log(`Passed in urls: ${urls}`);
-
   const taskIndex = process.env.CLOUD_RUN_TASK_INDEX || 0;
   const url = urls[taskIndex];
   if (!url) {
@@ -58,6 +59,7 @@ async function main(urls) {
   }
 
   try {
+    const workableURL = 'https://apply.workable.com';
     const inputURL = url;
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -67,28 +69,65 @@ async function main(urls) {
     console.log('Navigating to:', inputURL);
 
     // Wait for the job listings to load
-    await page.waitForSelector('.styles--Qqz1P');
+    await page.waitForSelector('ul[data-ui="list"]');
 
     await page.screenshot({ path: 'example.png', fullPage: true });
 
-    const jobData = await page.$$eval('.styles--1vo9F', (elements, inputURL) => {
+    const companyName = await page.$eval('meta[property="og:title"]', element => element.getAttribute('content'))
+
+    const jobs = await page.$$eval('li[data-ui="job"]', async (elements, workableURL) => {
       console.log('Number of elements found:', elements.length);
-      return elements.map((e) => ({
-        title: e.querySelector('.styles--3TJHk').innerText,
-        location: e.querySelector('.styles--1Sarc').innerText,
-        type: e.querySelector('.styles--2TdGW.styles--3brK_.styles--3da4O').innerText,
-        url: inputURL + e.querySelector('.styles--1OnOt').getAttribute('href'), // Use getAttribute('href') to get the href attribute value
-        role: e.querySelector('[data-ui="job-department"]').innerText, // Use attribute selector for data-ui="job-department"
-      }));
-    }, inputURL);
+      const jobsData = [];
+    
+      for (const e of elements) {
+        const jobData = {
+          createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
+          title: e.querySelector('h3[data-ui="job-title"]').innerText,
+          location: e.querySelector('span[data-ui="job-location"]').innerText,
+          workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
+          workType: e.querySelector('span[data-ui="job-type"]').innerText,
+          url: workableURL + e.querySelector('li[data-ui="job"] > a').getAttribute('href'),
+          areas: e.querySelector('span[data-ui="job-department"]').innerText,
+          description: '', // Initialize description as an empty string
+        };
+    
+        jobsData.push(jobData);
+      }
+    
+      return jobsData;
+    }, workableURL);
 
-    console.log('Scraped data:', jobData);
+    console.log('Scraped data:', jobs);
 
- 
+    // Visit each job posting page to extract the description
+    for (const job of jobs) {
+      const jobPage = await browser.newPage();
+      await jobPage.goto(job.url);
+      console.log('Navigating to job page', jobs.indexOf(job), 'of', jobs.length, ':', job.url)
+      try {
+        await jobPage.waitForSelector('[data-ui="job-description"]', { timeout: 10000 }); // Adjust timeout as needed
+        job.description = await jobPage.$eval('[data-ui="job-description"]', (element) => element.innerText);
+      } catch (error) {
+        console.error(`Error extracting description for job ${job.title}:`, error.message);
+      }
+  
+      await jobPage.close();
+    }
 
+    console.log('Scraped data with descriptions:', jobs);
+
+    
+
+    // Save data to JSON file
+    // fs.writeFile(filename, JSON.stringify(jobs, null, 2), (err) => {
+    //   if (err) throw err;
+    //   console.log('Data saved to', filename);
+    // });
+
+    const jobData = jobs
     const storage = new Storage();
     const bucket = await createStorageBucketIfMissing(storage, bucketName);
-    await uploadJson(bucket, taskIndex, jobData);
+    await uploadJson(bucket, companyName, jobData);
     console.log("Upload complete!");
 
     await browser.close();
@@ -99,6 +138,6 @@ async function main(urls) {
 }
 
 main(process.argv.slice(2)).catch((err) => {
-  console.error(JSON.stringify({ severity: "ERROR", message: err.message }));
-  process.exit(1);
-});
+    console.error(JSON.stringify({ severity: "ERROR", message: err.message }));
+    process.exit(1);
+  });

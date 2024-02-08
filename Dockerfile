@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ghcr.io/puppeteer/puppeteer:16.1.0
+FROM ghcr.io/puppeteer/puppeteer:22
 
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure both package.json AND package-lock.json are copied.
@@ -20,7 +20,7 @@ FROM ghcr.io/puppeteer/puppeteer:16.1.0
 COPY package*.json ./
 
 # Install production dependencies.
-RUN npm ci --omit=dev
+RUN npm i
 
 # Copy all scripts
 COPY . .
