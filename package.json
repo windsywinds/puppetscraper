@@ -1,5 +1,5 @@
 {
-  "name": "workable job scraper",
+  "name": "workable-job-scraper",
   "version": "1.0.0",
   "description": "Scrape workable job boards and output to .json file",
   "main": "index.js",
