@@ -1,6 +1,3 @@
-//index.js is the current iteration being developed for GCloud Run.
-//Workable.js is a working version that runs locally
-//gCloudRun.jsx is a starter version of getting this running on Google Cloud Run
 const fs = require('fs');
 const puppeteer = require("puppeteer");
 const { Storage } = require("@google-cloud/storage");
@@ -73,10 +70,10 @@ async function main(urls) {
 
     // Wait for the job listings to load
     await page.waitForSelector('ul[data-ui="list"]');
+
+    //await page.screenshot({ path: 'example.png', fullPage: true });
+
     const companyName = await page.$eval('meta[property="og:title"]', element => element.getAttribute('content'))
-
-    //await page.screenshot({ path: `${companyName}-page-screenshot.png`, fullPage: true });
-
 
     const jobs = await page.$$eval('li[data-ui="job"]', async (elements, workableURL) => {
       console.log('Number of elements found:', elements.length);
@@ -120,6 +117,13 @@ async function main(urls) {
     console.log('Scraped data with descriptions:', jobs);
 
     
+
+    // Save data to JSON file
+    // fs.writeFile(filename, JSON.stringify(jobs, null, 2), (err) => {
+    //   if (err) throw err;
+    //   console.log('Data saved to', filename);
+    // });
+
     const jobData = jobs
     const storage = new Storage();
     const bucket = await createStorageBucketIfMissing(storage, bucketName);
@@ -133,6 +137,4 @@ async function main(urls) {
   }
 }
 
-console.log("Workable Scraper Starting...")
 main();
-console.log("Workable Scraper Ended...")
