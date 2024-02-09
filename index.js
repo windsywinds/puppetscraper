@@ -37,7 +37,7 @@ async function getJobData(browser, url) {
         location: e.querySelector('span[data-ui="job-location"]').innerText,
         workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
         workType: e.querySelector('span[data-ui="job-type"]').innerText,
-        url: e.querySelector('a').getAttribute('href'),
+        url: 'https://apply.workable.com' + e.querySelector('a').getAttribute('href'),
         areas: e.querySelector('span[data-ui="job-department"]').innerText,
         description: '', // Initialize description as an empty string
       };
