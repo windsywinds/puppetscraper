@@ -6,7 +6,7 @@ async function initBrowser() {
   return await puppeteer.launch();
 }
 
-async function takeScreenshot(browser, url) {
+async function getJobData(browser, url) {
   const page = await browser.newPage();
 
   console.log(`Navigating to ${url}`);
@@ -18,9 +18,69 @@ async function takeScreenshot(browser, url) {
   });
 
   // Extracting webpage title
-  const title = await page.$eval('meta[property="og:title"]', (element) => element.content);
+  const companyName = await page.$eval(
+    'meta[property="og:title"]',
+    (element) => element.content
+  );
 
-  return { screenshot, title };
+  // Wait for the job listings to load
+  await page.waitForSelector('ul[data-ui="list"]');
+
+  const jobs = await page.$$eval('li[data-ui="job"]', async (elements) => {
+    console.log("Number of elements found:", elements.length);
+    const jobsData = [];
+
+    for (const e of elements) {
+      const jobData = {
+        createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
+        title: e.querySelector('h3[data-ui="job-title"]').innerText,
+        location: e.querySelector('span[data-ui="job-location"]').innerText,
+        workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
+        workType: e.querySelector('span[data-ui="job-type"]').innerText,
+        url: e.querySelector('a').getAttribute('href'),
+        areas: e.querySelector('span[data-ui="job-department"]').innerText,
+        description: '', // Initialize description as an empty string
+      };
+
+      jobsData.push(jobData);
+    }
+
+    return jobsData;
+  });
+
+  console.log("Scraped data:", jobs);
+
+  // Visit each job posting page to extract the description
+  for (const job of jobs) {
+    const jobPage = await browser.newPage();
+    await jobPage.goto(job.url);
+    console.log(
+      "Navigating to job page",
+      jobs.indexOf(job) + 1,
+      "of",
+      jobs.length,
+      ":",
+      job.url
+    );
+    try {
+      await jobPage.waitForSelector('[data-ui="job-description"]', {
+        timeout: 10000,
+      }); // Adjust timeout as needed
+      job.description = await jobPage.$eval(
+        '[data-ui="job-description"]',
+        (element) => element.innerText
+      );
+    } catch (error) {
+      console.error(
+        `Error extracting description for job ${job.title}:`,
+        error.message
+      );
+    }
+
+    await jobPage.close();
+  }
+
+  return { screenshot, companyName, jobs };
 }
 
 async function createStorageBucketIfMissing(storage, bucketName) {
@@ -40,20 +100,38 @@ async function createStorageBucketIfMissing(storage, bucketName) {
   return createdBucket;
 }
 
-async function uploadData(bucket, taskIndex, screenshotData) {
+async function uploadData(bucket, taskIndex, jobData) {
   // Create filename using the current time and task index
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  const filename = `${date.toISOString()}-task${taskIndex}`;
+  const filename = `${date.toISOString()}-${jobData.companyName}-task${taskIndex}`;
 
   // Upload screenshot
   console.log(`Uploading screenshot as '${filename}.png'`);
-  await bucket.file(`${filename}.png`).save(screenshotData.screenshot);
+  await bucket.file(`${filename}.png`).save(jobData.screenshot);
 
-  // Create JSON object with title and upload
-  const jsonData = JSON.stringify({ title: screenshotData.title });
-  console.log(`Uploading data as '${filename}.json'`);
-  await bucket.file(`${filename}.json`).save(jsonData);
+  // Upload JSON data for each job
+  for (const jobIndex in jobData.jobs) {
+    const job = jobData.jobs[jobIndex];
+    const jobJsonData = JSON.stringify({
+      title: job.title,
+      location: job.location,
+      workStyle: job.workStyle,
+      workType: job.workType,
+      url: job.url,
+      areas: job.areas,
+      description: job.description,
+    });
+
+    console.log(
+      `Uploading data for job ${parseInt(jobIndex) + 1} as '${filename}-job${parseInt(
+        jobIndex
+      )}.json'`
+    );
+    await bucket
+      .file(`${filename}-job${parseInt(jobIndex)}.json`)
+      .save(jobJsonData);
+  }
 }
 
 async function main(urls) {
@@ -76,7 +154,7 @@ async function main(urls) {
   }
 
   const browser = await initBrowser();
-  const screenshotData = await takeScreenshot(browser, url).catch(async (err) => {
+  const jobData = await getJobData(browser, url).catch(async (err) => {
     // Make sure to close the browser if we hit an error.
     await browser.close();
     throw err;
@@ -86,7 +164,7 @@ async function main(urls) {
   console.log("Initializing Cloud Storage client");
   const storage = new Storage();
   const bucket = await createStorageBucketIfMissing(storage, bucketName);
-  await uploadData(bucket, taskIndex, screenshotData);
+  await uploadData(bucket, taskIndex, jobData);
 
   console.log("Upload complete!");
 }

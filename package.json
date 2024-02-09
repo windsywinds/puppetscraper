@@ -1,8 +1,8 @@
 {
-  "name": "screenshot",
+  "name": "workable-scraper",
   "version": "1.0.0",
-  "description": "Create a job to capture screenshots",
-  "main": "screenshot.js",
+  "description": "Create a job to capture workable job postings",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

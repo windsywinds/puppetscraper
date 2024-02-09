@@ -25,4 +25,4 @@ RUN npm ci --omit=dev
 # Copy all scripts
 COPY . .
 
-ENTRYPOINT ["node", "screenshot.js"]
+ENTRYPOINT ["node", "index.js"]
