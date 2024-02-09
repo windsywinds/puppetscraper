@@ -17,7 +17,7 @@ async function getJobData(browser, url) {
     fullPage: true,
   });
 
-  // Extracting webpage title
+  // Get company name from page title
   const companyName = await page.$eval(
     'meta[property="og:title"]',
     (element) => element.content
@@ -62,10 +62,11 @@ async function getJobData(browser, url) {
       ":",
       job.url
     );
+    //add the description to the job entry data
     try {
       await jobPage.waitForSelector('[data-ui="job-description"]', {
         timeout: 10000,
-      }); // Adjust timeout as needed
+      }); 
       job.description = await jobPage.$eval(
         '[data-ui="job-description"]',
         (element) => element.innerText
@@ -94,14 +95,14 @@ async function createStorageBucketIfMissing(storage, bucketName) {
     return bucket;
   }
 
-  // Create bucket
+  // Create bucket if needed
   const [createdBucket] = await storage.createBucket(bucketName);
   console.log(`Created Cloud Storage bucket '${createdBucket.name}'`);
   return createdBucket;
 }
 
 async function uploadData(bucket, taskIndex, jobData) {
-  // Create filename using the current time and task index
+  // Create filename using the current time, company name and task index
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   const filename = `${date.toISOString()}-${jobData.companyName}-task${taskIndex}`;
@@ -110,10 +111,10 @@ async function uploadData(bucket, taskIndex, jobData) {
   console.log(`Uploading screenshot as '${filename}.png'`);
   await bucket.file(`${filename}.png`).save(jobData.screenshot);
 
-  // Upload JSON data for each job
-  for (const jobIndex in jobData.jobs) {
-    const job = jobData.jobs[jobIndex];
-    const jobJsonData = JSON.stringify({
+  // Upload JSON data for all jobs related to the URL given
+  const jsonData = {
+    companyName: jobData.companyName,
+    jobs: jobData.jobs.map((job, index) => ({
       title: job.title,
       location: job.location,
       workStyle: job.workStyle,
@@ -121,18 +122,14 @@ async function uploadData(bucket, taskIndex, jobData) {
       url: job.url,
       areas: job.areas,
       description: job.description,
-    });
+      // more properties to be added
+    })),
+  };
 
-    console.log(
-      `Uploading data for job ${parseInt(jobIndex) + 1} as '${filename}-job${parseInt(
-        jobIndex
-      )}.json'`
-    );
-    await bucket
-      .file(`${filename}-job${parseInt(jobIndex)}.json`)
-      .save(jobJsonData);
-  }
+  console.log(`Uploading data as '${filename}.json'`);
+  await bucket.file(`${filename}.json`).save(JSON.stringify(jsonData));
 }
+
 
 async function main(urls) {
   console.log(`Passed in urls: ${urls}`);
@@ -155,7 +152,7 @@ async function main(urls) {
 
   const browser = await initBrowser();
   const jobData = await getJobData(browser, url).catch(async (err) => {
-    // Make sure to close the browser if we hit an error.
+    // Close the browser if we hit an error.
     await browser.close();
     throw err;
   });
