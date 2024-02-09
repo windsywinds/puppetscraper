@@ -1,0 +1,179 @@
+// This script will run and save files locally using the below command
+// node local.js https://apply.workable.com/auror https://apply.workable.com/fergus
+
+const fs = require('fs');
+const puppeteer = require("puppeteer");
+const { Storage } = require("@google-cloud/storage");
+
+async function initBrowser() {
+  console.log("Initializing browser");
+  return await puppeteer.launch();
+}
+
+async function getJobData(browser, url) {
+  const page = await browser.newPage();
+
+  console.log(`Navigating to ${url}`);
+  await page.goto(url);
+
+  console.log(`Taking a screenshot of ${url}`);
+  const screenshot = await page.screenshot({
+    fullPage: true,
+  });
+
+  // Get company name from page title
+  const companyName = await page.$eval(
+    'meta[property="og:title"]',
+    (element) => element.content
+  );
+
+  // Wait for the job listings to load
+  await page.waitForSelector('ul[data-ui="list"]');
+
+  const jobs = await page.$$eval('li[data-ui="job"]', async (elements) => {
+    console.log("Number of elements found:", elements.length);
+    const jobsData = [];
+
+    for (const e of elements) {
+      const jobData = {
+        createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
+        title: e.querySelector('h3[data-ui="job-title"]').innerText,
+        location: e.querySelector('span[data-ui="job-location"]').innerText,
+        workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
+        workType: e.querySelector('span[data-ui="job-type"]').innerText,
+        url: 'https://apply.workable.com' + e.querySelector('a').getAttribute('href'),
+        areas: e.querySelector('span[data-ui="job-department"]').innerText,
+        description: '', // Initialize description as an empty string
+      };
+
+      jobsData.push(jobData);
+    }
+
+    return jobsData;
+  });
+
+  console.log("Scraped data:", jobs);
+
+  // Visit each job posting page to extract the description
+  for (const job of jobs) {
+    const jobPage = await browser.newPage();
+    await jobPage.goto(job.url);
+    console.log(
+      "Navigating to job page",
+      jobs.indexOf(job) + 1,
+      "of",
+      jobs.length,
+      ":",
+      job.url
+    );
+    //add the description to the job entry data
+    try {
+      await jobPage.waitForSelector('[data-ui="job-description"]', {
+        timeout: 10000,
+      }); 
+      job.description = await jobPage.$eval(
+        '[data-ui="job-description"]',
+        (element) => element.innerText
+      );
+    } catch (error) {
+      console.error(
+        `Error extracting description for job ${job.title}:`,
+        error.message
+      );
+    }
+
+    await jobPage.close();
+  }
+
+  return { screenshot, companyName, jobs };
+}
+
+async function createStorageBucketIfMissing(storage, bucketName) {
+  console.log(
+    `Checking for Cloud Storage bucket '${bucketName}' and creating if not found`
+  );
+  const bucket = storage.bucket(bucketName);
+  const [exists] = await bucket.exists();
+  if (exists) {
+    // Bucket exists, nothing to do here
+    return bucket;
+  }
+
+  // Create bucket if needed
+  const [createdBucket] = await storage.createBucket(bucketName);
+  console.log(`Created Cloud Storage bucket '${createdBucket.name}'`);
+  return createdBucket;
+}
+
+async function uploadData(taskIndex, jobData) {
+  // Create filename using the current time, company name and task index
+  const date = new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  const filename = `${date.toISOString().replace(/:/g, '_')}-${jobData.companyName}-task${taskIndex}`;
+
+  // Upload screenshot
+  console.log(`Uploading screenshot as '${filename}.png'`);
+  fs.writeFile(`${filename}.png`, jobData.screenshot, (err) => {
+    if (err) throw err;
+    console.log('Data saved to', filename);
+  });
+  
+
+  // Upload JSON data for all jobs related to the URL given
+  const jsonData = {
+    companyName: jobData.companyName,
+    jobs: jobData.jobs.map((job, index) => ({
+      title: job.title,
+      location: job.location,
+      workStyle: job.workStyle,
+      workType: job.workType,
+      url: job.url,
+      areas: job.areas,
+      description: job.description,
+      // more properties to be added
+    })),
+  };
+
+  console.log(`Uploading data as '${filename}.json'`);
+  fs.writeFile(`${filename}.json`, JSON.stringify(jsonData, null, 2), (err) => {
+    if (err) throw err;
+    console.log('Data saved to', filename);
+  });
+}
+
+
+async function main(urls) {
+  console.log(`Passed in urls: ${urls}`);
+
+  const taskIndex = process.env.CLOUD_RUN_TASK_INDEX || 0;
+  const url = urls[taskIndex];
+  if (!url) {
+    throw new Error(
+      `No url found for task ${taskIndex}. Ensure at least ${
+        parseInt(taskIndex, 10) + 1
+      } url(s) have been specified as command args.`
+    );
+  }
+  
+
+  const browser = await initBrowser();
+  const jobData = await getJobData(browser, url).catch(async (err) => {
+    // Close the browser if we hit an error.
+    await browser.close();
+    throw err;
+  });
+  await browser.close();
+
+  console.log("Initializing Cloud Storage client");
+//   const storage = new Storage();
+//   const bucket = await createStorageBucketIfMissing(storage, bucketName);
+//  await uploadData(bucket, taskIndex, jobData);
+await uploadData(taskIndex, jobData);
+
+  console.log("Upload complete!");
+}
+
+main(process.argv.slice(2)).catch((err) => {
+  console.error(JSON.stringify({ severity: "ERROR", message: err.message }));
+  process.exit(1);
+});
