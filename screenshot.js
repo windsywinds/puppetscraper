@@ -7,37 +7,21 @@ async function initBrowser() {
 }
 
 async function takeScreenshot(browser, url) {
-    const page = await browser.newPage();
-  
-    console.log(`Navigating to ${url}`);
-    await page.goto(url);
-  
-    console.log(`Getting data from ${url}`);
-  
-    const jobs = await page.$$eval('li[data-ui="job"]', async (elements) => {
-      console.log('Number of elements found:', elements.length);
-      const jobsData = [];
-  
-      for (const e of elements) {
-        const jobData = {
-          createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
-          title: e.querySelector('h3[data-ui="job-title"]').innerText,
-          location: e.querySelector('span[data-ui="job-location"]').innerText,
-          workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
-          workType: e.querySelector('span[data-ui="job-type"]').innerText,
-          areas: e.querySelector('span[data-ui="job-department"]').innerText,
-          description: '', // Initialize description as an empty string
-        };
-  
-        jobsData.push(jobData);
-      }
-  
-      return jobsData; // Remove await here
-    });
-  
-    return jobs;
-  }
-  
+  const page = await browser.newPage();
+
+  console.log(`Navigating to ${url}`);
+  await page.goto(url);
+
+  console.log(`Taking a screenshot of ${url}`);
+  const screenshot = await page.screenshot({
+    fullPage: true,
+  });
+
+  // Extracting webpage title
+  const title = await page.$eval('meta[property="og:title"]', (element) => element.content);
+
+  return { screenshot, title };
+}
 
 async function createStorageBucketIfMissing(storage, bucketName) {
   console.log(
@@ -56,21 +40,20 @@ async function createStorageBucketIfMissing(storage, bucketName) {
   return createdBucket;
 }
 
-async function uploadImage(bucket, taskIndex, imageBuffer) {
+async function uploadData(bucket, taskIndex, screenshotData) {
   // Create filename using the current time and task index
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  const filename = `${date.toISOString()}-task${taskIndex}.json`;
+  const filename = `${date.toISOString()}-task${taskIndex}`;
 
-  console.log(`Uploading JSON file as '${filename}'`);
-  
-  // Convert JSON data to a buffer
-  const jsonBuffer = Buffer.from(JSON.stringify(imageBuffer), 'utf-8');
+  // Upload screenshot
+  console.log(`Uploading screenshot as '${filename}.png'`);
+  await bucket.file(`${filename}.png`).save(screenshotData.screenshot);
 
-  // Upload the JSON file to the bucket
-  await bucket.file(filename).save(jsonBuffer, {
-    contentType: 'application/json' // Specify content type as JSON
-  });
+  // Create JSON object with title and upload
+  const jsonData = JSON.stringify({ title: screenshotData.title });
+  console.log(`Uploading data as '${filename}.json'`);
+  await bucket.file(`${filename}.json`).save(jsonData);
 }
 
 async function main(urls) {
@@ -93,7 +76,7 @@ async function main(urls) {
   }
 
   const browser = await initBrowser();
-  const imageBuffer = await takeScreenshot(browser, url).catch(async (err) => {
+  const screenshotData = await takeScreenshot(browser, url).catch(async (err) => {
     // Make sure to close the browser if we hit an error.
     await browser.close();
     throw err;
@@ -103,7 +86,7 @@ async function main(urls) {
   console.log("Initializing Cloud Storage client");
   const storage = new Storage();
   const bucket = await createStorageBucketIfMissing(storage, bucketName);
-  await uploadImage(bucket, taskIndex, imageBuffer);
+  await uploadData(bucket, taskIndex, screenshotData);
 
   console.log("Upload complete!");
 }

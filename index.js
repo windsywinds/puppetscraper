@@ -1,43 +1,9 @@
+//index.js is the current iteration being developed for GCloud Run.
+//Workable.js is a working version that runs locally
+//gCloudRun.jsx is a starter version of getting this running on Google Cloud Run
+const fs = require('fs');
 const puppeteer = require("puppeteer");
 const { Storage } = require("@google-cloud/storage");
-
-async function initBrowser() {
-  console.log("Initializing browser");
-  return await puppeteer.launch();
-}
-
-async function takeScreenshot(browser, url) {
-    const page = await browser.newPage();
-  
-    console.log(`Navigating to ${url}`);
-    await page.goto(url);
-  
-    console.log(`Getting data from ${url}`);
-  
-    const jobs = await page.$$eval('li[data-ui="job"]', async (elements) => {
-      console.log('Number of elements found:', elements.length);
-      const jobsData = [];
-  
-      for (const e of elements) {
-        const jobData = {
-          createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
-          title: e.querySelector('h3[data-ui="job-title"]').innerText,
-          location: e.querySelector('span[data-ui="job-location"]').innerText,
-          workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
-          workType: e.querySelector('span[data-ui="job-type"]').innerText,
-          areas: e.querySelector('span[data-ui="job-department"]').innerText,
-          description: '', // Initialize description as an empty string
-        };
-  
-        jobsData.push(jobData);
-      }
-  
-      return jobsData; // Remove await here
-    });
-  
-    return jobs;
-  }
-  
 
 async function createStorageBucketIfMissing(storage, bucketName) {
   console.log(
@@ -56,26 +22,29 @@ async function createStorageBucketIfMissing(storage, bucketName) {
   return createdBucket;
 }
 
-async function uploadImage(bucket, taskIndex, imageBuffer) {
+async function uploadJson(bucket, companyName, jobData) {
   // Create filename using the current time and task index
+  //create filename convention
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  const filename = `${date.toISOString()}-task${taskIndex}.json`;
+  const formattedDate = date.toISOString().replace(/:/g, '_');
+  const filename = `${formattedDate}-${companyName}-jobs.json`;
 
   console.log(`Uploading JSON file as '${filename}'`);
-  
-  // Convert JSON data to a buffer
-  const jsonBuffer = Buffer.from(JSON.stringify(imageBuffer), 'utf-8');
 
-  // Upload the JSON file to the bucket
-  await bucket.file(filename).save(jsonBuffer, {
-    contentType: 'application/json' // Specify content type as JSON
-  });
+  try {
+    // Upload JSON data to the specified Google Cloud Storage bucket
+    await bucket.file(filename).save(JSON.stringify(jobData, null, 2));
+
+    console.log(`JSON file '${filename}' uploaded to bucket.`);
+  } catch (error) {
+    console.error(`Error uploading JSON file '${filename}' to bucket:`, error);
+    throw error; // Rethrow the error to propagate it further
+  }
 }
 
 async function main(urls) {
   console.log(`Passed in urls: ${urls}`);
-
   const taskIndex = process.env.CLOUD_RUN_TASK_INDEX || 0;
   const url = urls[taskIndex];
   if (!url) {
@@ -92,23 +61,78 @@ async function main(urls) {
     );
   }
 
-  const browser = await initBrowser();
-  const imageBuffer = await takeScreenshot(browser, url).catch(async (err) => {
-    // Make sure to close the browser if we hit an error.
+  try {
+    const workableURL = 'https://apply.workable.com';
+    const inputURL = url;
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    console.log('Launching browser...');
+    
+    await page.goto(inputURL);
+    console.log('Navigating to:', inputURL);
+
+    // Wait for the job listings to load
+    await page.waitForSelector('ul[data-ui="list"]');
+    const companyName = await page.$eval('meta[property="og:title"]', element => element.getAttribute('content'))
+
+    //await page.screenshot({ path: `${companyName}-page-screenshot.png`, fullPage: true });
+
+
+    const jobs = await page.$$eval('li[data-ui="job"]', async (elements, workableURL) => {
+      console.log('Number of elements found:', elements.length);
+      const jobsData = [];
+    
+      for (const e of elements) {
+        const jobData = {
+          createdAt: e.querySelector('small[data-ui="job-posted"]').innerText,
+          title: e.querySelector('h3[data-ui="job-title"]').innerText,
+          location: e.querySelector('span[data-ui="job-location"]').innerText,
+          workStyle: e.querySelector('span[data-ui="job-workplace"]').innerText,
+          workType: e.querySelector('span[data-ui="job-type"]').innerText,
+          url: workableURL + e.querySelector('li[data-ui="job"] > a').getAttribute('href'),
+          areas: e.querySelector('span[data-ui="job-department"]').innerText,
+          description: '', // Initialize description as an empty string
+        };
+    
+        jobsData.push(jobData);
+      }
+    
+      return jobsData;
+    }, workableURL);
+
+    console.log('Scraped data:', jobs);
+
+    // Visit each job posting page to extract the description
+    for (const job of jobs) {
+      const jobPage = await browser.newPage();
+      await jobPage.goto(job.url);
+      console.log('Navigating to job page', jobs.indexOf(job), 'of', jobs.length, ':', job.url)
+      try {
+        await jobPage.waitForSelector('[data-ui="job-description"]', { timeout: 10000 }); // Adjust timeout as needed
+        job.description = await jobPage.$eval('[data-ui="job-description"]', (element) => element.innerText);
+      } catch (error) {
+        console.error(`Error extracting description for job ${job.title}:`, error.message);
+      }
+  
+      await jobPage.close();
+    }
+
+    console.log('Scraped data with descriptions:', jobs);
+
+    
+    const jobData = jobs
+    const storage = new Storage();
+    const bucket = await createStorageBucketIfMissing(storage, bucketName);
+    await uploadJson(bucket, companyName, jobData);
+    console.log("Upload complete!");
+
     await browser.close();
-    throw err;
-  });
-  await browser.close();
-
-  console.log("Initializing Cloud Storage client");
-  const storage = new Storage();
-  const bucket = await createStorageBucketIfMissing(storage, bucketName);
-  await uploadImage(bucket, taskIndex, imageBuffer);
-
-  console.log("Upload complete!");
+    console.log('Browser closed.');
+  } catch (error) {
+    console.error('An error occurred:', error);
+  }
 }
 
-main(process.argv.slice(2)).catch((err) => {
-  console.error(JSON.stringify({ severity: "ERROR", message: err.message }));
-  process.exit(1);
-});
+console.log("Workable Scraper Starting...")
+main();
+console.log("Workable Scraper Ended...")
