@@ -9,7 +9,7 @@ import finaliseDataEntry from "./components/finaliseDataEntry.js";
 //for DOM scrapers to use puppeter
 async function initBrowser() {
   console.log("Initializing browser");
-  return await puppeteer.launch({headless: false});
+  return await puppeteer.launch();
 }
 
 async function main(urls) {
