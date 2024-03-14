@@ -1,15 +1,25 @@
 {
-  "name": "workable-scraper",
+  "name": "job-board-scraper",
   "version": "1.0.0",
-  "description": "Create a job to capture workable job postings",
+  "description": "Create a job to capture job postings",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "workable": "node local.js https://apply.workable.com/auror",
+    "prettier": "prettier . --write"
   },
   "author": "Google LLC",
   "license": "Apache-2.0",
   "dependencies": {
     "@google-cloud/storage": "^5.18.2",
+    "@prisma/client": "^5.9.1",
+    "dotenv": "^16.4.3",
+    "mongodb": "^6.3.0",
+    "node-fetch": "^3.3.2",
     "puppeteer": "^15.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "prisma": "^5.9.1"
   }
 }

@@ -2,5 +2,8 @@ node_modules
 npm-debug.log
 
 # local output files
-*-task*.json
+*task*.json
 *.png
+
+*/bak*
+
