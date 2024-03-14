@@ -1,10 +1,27 @@
-FROM ghcr.io/puppeteer/puppeteer:latest
+FROM node:20.9.0-alpine
+
+WORKDIR /app
+
+RUN apk update && apk add --no-cache nmap && \
+  echo @edge http://nl.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+  echo @edge http://nl.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+  apk update && \
+  apk add --no-cache \
+  chromium \
+  harfbuzz \
+  "freetype>2.8" \
+  ttf-freefont \
+  nss
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+ENV DOCKER_ENVIRONMENT=true
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install 
+RUN npm ci 
 
 # Copy application code
 COPY . .
@@ -12,29 +29,6 @@ COPY . .
 # generate prisma schema
 RUN npx prisma generate
 
-# Install necessary packages for Puppeteer and Chromium
-RUN apk add --no-cache \
-      chromium \
-      nss \
-      freetype \
-      harfbuzz \
-      ca-certificates \
-      ttf-freefont \
-      nodejs \
-      yarn
-
-
-# Install Puppeteer
-RUN yarn add puppeteer@15.0.0
-
-# Add user so we don't need --no-sandbox.
-RUN addgroup -S pptruser && adduser -S -G pptruser pptruser \
-    && mkdir -p /home/pptruser/Downloads /app \
-    && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /app
-
-# Run everything after as non-privileged user.
-USER pptruser
-
 # Set entry point
 ENTRYPOINT ["node", "index.js"]
+
