@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM ghcr.io/puppeteer/puppeteer:latest
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -23,9 +23,6 @@ RUN apk add --no-cache \
       nodejs \
       yarn
 
-
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Install Puppeteer
 RUN yarn add puppeteer@15.0.0
