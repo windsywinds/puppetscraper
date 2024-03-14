@@ -11,9 +11,9 @@ git clone https://github.com/account/repo.git
 # Setup gcloud
 
 ```sh
-PROJECT_ID=$PROJECT_ID
+PROJECT_ID=puppetscrape
 REGION=australia-southeast1
-gcloud config set core/project $PROJECT_ID
+gcloud config set core/project puppetscrape
 ```
 
 # Enable APIs
@@ -28,7 +28,7 @@ gcloud services enable \
 # CD into project dir
 
 ```sh
-cd <repo directory name>
+cd puppetscraper
 ```
 
 # Create service account
@@ -40,9 +40,9 @@ gcloud iam service-accounts create jobscraper-sa --display-name="Job Scraper ser
 # Give service account access
 
 ```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID \
+gcloud projects add-iam-policy-binding puppetscrape \
   --role roles/storage.admin \
-  --member serviceAccount:jobscraper-sa@$PROJECT_ID.iam.gserviceaccount.com
+  --member serviceAccount:jobscraper-sa@puppetscrape.iam.gserviceaccount.com
 ```
 
 # Create Cloud Run Job
@@ -52,18 +52,12 @@ The URL's in this list are examples that currently cover each job scraper.
 ```sh
 gcloud beta run jobs deploy jobscraper \
   --source=. \
-  --args="https://jobs.lever.co/health-match/" \
   --args="https://apply.workable.com/fergus/" \
-  --args="https://aroabio.bamboohr.com/careers" \
-  --args="https://external-jobboard.myrecruitmentplus.com/?recruiterId=7553" \
-  --args="https://boards.greenhouse.io/neara" \
-  --args="https://www.spaceship.com.au/careers/" \
-  --args="https://careers.redbubble.com/jobs" \
-  --tasks=7 \
+  --tasks=1 \
   --task-timeout=5m \
   --region=australia-southeast1 \
   --set-env-vars=DATABASE_URL=database_connection_string \
-  --service-account=jobscraper-sa@$PROJECT_ID.iam.gserviceaccount.com
+  --service-account=jobscraper-sa@puppetscrape.iam.gserviceaccount.com
 ```
 
 - Note: Change the value of DATABASE_URL to your database connection string.

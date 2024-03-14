@@ -1,5 +1,4 @@
-const { WORKTYPES, WORKSTYLES, SENIORITYS, LOCATIONS, TIMING, BUSINESS_AREAS } = require('./keywords')
-
+import { WORKTYPES, WORKSTYLES, SENIORITYS, LOCATIONS, TIMING, BUSINESS_AREAS } from './keywords';
 
 async function dataRationaliser(jobListing) {
     const rationalisedData = {};
@@ -63,15 +62,15 @@ function findMatchAndUpdate(keyword, keywordArray) {
 
     // if value is a string no loop required, return as a single entry in an array
     if (typeof keyword === 'string') {
-                const value = keyword.toUpperCase();
-                for (const arr of keywordArray) {
-                    if (arr.includes(value)) {
-                        console.log(`Match found for ${keyword}:, ${arr[0]} from keyword: ${value}`)
-                        matches = [arr[0]];
-                        break;
-                    }
-                }
-            // if array, check each entry
+        const value = keyword.toUpperCase();
+        for (const arr of keywordArray) {
+            if (arr.includes(value)) {
+                console.log(`Match found for ${keyword}:, ${arr[0]} from keyword: ${value}`)
+                matches = [arr[0]];
+                break;
+            }
+        }
+    // if array, check each entry
     } else if (typeof keyword === 'object') { 
         for (const key in keyword) {
             if (Object.hasOwnProperty.call(keyword, key)) {
@@ -87,7 +86,6 @@ function findMatchAndUpdate(keyword, keywordArray) {
         }
     }
 
-
     if (Object.keys(matches).length > 0) {
         return matches;
     }
@@ -101,4 +99,4 @@ function toPascalCase(str) {
     }).replace(/^\s+|\s+$/g, '');
 }
 
-module.exports = dataRationaliser
+export default dataRationaliser;

@@ -1,15 +1,16 @@
-const puppeteer = require("puppeteer");
+import puppeteer from "puppeteer";
 
 //scraper imports
-const getWorkableData = require("./jobsBoards/workable/workable.js");
-const getLeverJobsData = require("./jobsBoards/lever/lever.js");
-const getMyRecruitmentJobData = require("./jobsBoards/myrecruitmentplus/myrecruitmentplus.js");
-const getGreenHouseData = require("./jobsBoards/greenhouse/greenhouse.js");
-const getBambooData = require("./jobsBoards/bamboohr/bamboohr.js");
-const getSwagappData = require("./jobsBoards/swagapp/swagapp.js");
-const findJobBoardFromUrl = require('./jobsBoards/findJobPlatform.js')
+import getWorkableData from "./jobsBoards/workable/workable.js";
+import getLeverJobsData from "./jobsBoards/lever/lever.js";
+import getMyRecruitmentJobData from "./jobsBoards/myrecruitmentplus/myrecruitmentplus.js";
+import getGreenHouseData from "./jobsBoards/greenhouse/greenhouse.js";
+import getBambooData from "./jobsBoards/bamboohr/bamboohr.js";
+import getSwagappData from "./jobsBoards/swagapp/swagapp.js";
+import findJobBoardFromUrl from './jobsBoards/findJobPlatform.js';
 //shared components
-const finaliseDataEntry = require("./components/finaliseDataEntry");
+import finaliseDataEntry from "./components/finaliseDataEntry";
+
 
 //for DOM scrapers to use puppeter
 async function initBrowser() {
