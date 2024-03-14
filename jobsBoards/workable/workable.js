@@ -1,4 +1,4 @@
-import { fetchWorkableFromAPI } from "./fetchWorkableData";
+import fetchWorkableFromAPI from "./fetchWorkableData.js";
 
 //find the name of the business
 async function getWorkableCompanyName(url) {

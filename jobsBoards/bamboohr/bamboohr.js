@@ -1,5 +1,4 @@
-const fetchBambooFromAPI = require("./fetchBambooData");
-
+import fetchBambooFromAPI from "./fetchBambooData";
 
 //find the name of the business
 async function getBambooCompanyName(url) {
@@ -40,5 +39,4 @@ async function getBambooData(url) {
   return jobData;
 }
 
-module.exports = getBambooData
-
+export default getBambooData;

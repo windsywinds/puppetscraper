@@ -2,14 +2,8 @@ import puppeteer from "puppeteer";
 
 //scraper imports
 import getWorkableData from "./jobsBoards/workable/workable.js";
-import getLeverJobsData from "./jobsBoards/lever/lever.js";
-import getMyRecruitmentJobData from "./jobsBoards/myrecruitmentplus/myrecruitmentplus.js";
-import getGreenHouseData from "./jobsBoards/greenhouse/greenhouse.js";
-import getBambooData from "./jobsBoards/bamboohr/bamboohr.js";
-import getSwagappData from "./jobsBoards/swagapp/swagapp.js";
-import findJobBoardFromUrl from './jobsBoards/findJobPlatform.js';
 //shared components
-import finaliseDataEntry from "./components/finaliseDataEntry";
+import finaliseDataEntry from "./components/finaliseDataEntry.js";
 
 
 //for DOM scrapers to use puppeter
@@ -38,23 +32,18 @@ async function main(urls) {
     if (url.includes("workable.com")) {
         jobData = await getWorkableData(url);
     } else if (url.includes("jobs.lever.co")) {
-      jobData = await getLeverJobsData(browser, url)
+      console.log("Unknown job board");
     } else if (url.includes("greenhouse.io")) {
-      jobData = await getGreenHouseData(url)
+      console.log("Unknown job board");
     } else if (url.includes("myrecruitmentplus")) {
-      jobData = await getMyRecruitmentJobData(browser, url)
+      console.log("Unknown job board");
     } else if (url.includes("bamboo")) {
-      jobData = await getBambooData(url);
+      console.log("Unknown job board");
     } else if (url.includes("swagapp")) {
-      jobData = await getSwagappData(url)
+      console.log("Unknown job board");
     } else {
       // handle other types of URLs or throw an error if needed
       console.log("Unknown job board");
-      let retrievedJobData = await findJobBoardFromUrl(browser, url)
-      if (!retrievedJobData) {
-        console.log("Job board unsupported")
-      }
-      jobData = retrievedJobData;
      } 
 
     console.log("Data retrieval complete");

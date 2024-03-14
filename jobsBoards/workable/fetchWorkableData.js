@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 
 async function fetchWorkableFromAPI(companyName) {
   const constructedUrl = `https://apply.workable.com/api/v3/accounts/${companyName}/jobs`;

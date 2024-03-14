@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 
 async function fetchBambooFromAPI(companyName) {
   const constructedUrl = `https://${companyName}.bamboohr.com/careers/list`;
@@ -20,13 +19,9 @@ async function fetchBambooFromAPI(companyName) {
     // Check if responseData.results is an array, if not, wrap it in an array
     const data = Array.isArray(responseData.result) ? responseData.result : [responseData.result];
 
-    // Loop over each job in data array to add any additional data from each jobs listing page
-    for (let index = 0; index < data.length; index++) {
-      const job = data[index];
+    // Loop over each job in data array to add any additional data from each job's listing page
+    for (const job of data) {
       console.log(`Merging job ${data.indexOf(job) + 1} of ${data.length}: ${String(job.id)}`);
-
-      // Introduce a delay between each fetch request to prevent being rate limited
-      //await new Promise(resolve => setTimeout(resolve, index * 1000));
 
       try {
         // Convert job.id to string before using it in the URL
@@ -50,5 +45,5 @@ async function fetchBambooFromAPI(companyName) {
     return null;
   }
 }
-module.exports = fetchBambooFromAPI;
 
+export default fetchBambooFromAPI;

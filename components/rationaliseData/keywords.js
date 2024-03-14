@@ -1,46 +1,45 @@
-
-const SYDNEY = [
+export const SYDNEY = [
     'Sydney',
     'SYDNEY',
     'SYD'
 ];
-const MELBOURNE = [
+export const MELBOURNE = [
     'Melbourne',
     'MELBOURNE',
     'MELB'
 ];
 
-const BRISBANE = [
+export const BRISBANE = [
     'Brisbane',
     'BRISBANE',
     'BNE'
 ];
-const GOLD_COAST = [
+export const GOLD_COAST = [
     'Gold Coast',
     'GOLD COAST',
     'OOL'
 ];
-const PERTH = [
+export const PERTH = [
     'Perth',
     'PERTH',
     'PER'
 ];
-const ADELAIDE = [
+export const ADELAIDE = [
     'Adelaide',
     'ADELAIDE',
     'ADL'
 ];
-const CANBERRA = [
+export const CANBERRA = [
     'Canberra',
     'CANBERRA',
     'CBR'
 ];
-const OTHER_AUS = [
+export const OTHER_AUS = [
     'Other - Australia',
     'OTHER - AUS',
     'OTHER - AU'
 ];
-const AUSTRALIA = [
+export const AUSTRALIA = [
     SYDNEY,
     MELBOURNE,
     BRISBANE,
@@ -51,62 +50,62 @@ const AUSTRALIA = [
     OTHER_AUS,
 ];
 
-const AUCKLAND = [
+export const AUCKLAND = [
     'Auckland',
     'AUCKLAND',
     'AKL'
-  ];
-  const HAMILTON = [
+];
+export const HAMILTON = [
     'Hamilton',
     'HAMILTON'
-  ];
-  const TAURANGA = [
+];
+export const TAURANGA = [
     'Tauranga',
     'TAURANGA'
-  ];
-  const GISBOURNE = [
+];
+export const GISBOURNE = [
     'Gisbourne',
     'GISBOURNE'
-  ];
-  const NAPIER = [
+];
+export const NAPIER = [
     'Napier',
     'NAPIER'
-  ];
-  const PALMERSTON_NORTH = [
+];
+export const PALMERSTON_NORTH = [
     'Palmerston North',
     'PALMERSTON NORTH'
-  ];
-  const WELLINGTON = [
+];
+export const WELLINGTON = [
     'Wellington',
     'WELLINGTON',
     'WLG'
-  ];
-  const NELSON = [
+];
+export const NELSON = [
     'Nelson',
     'NELSON'
-  ];
-  const CHRISTCHURCH = [
+];
+export const CHRISTCHURCH = [
     'Christchurch',
     'CHRISTCHURCH',
     'CHCH'
-  ];
-  const QUEENSTOWN = [
+];
+export const QUEENSTOWN = [
     'Queenstown',
     'QUEENSTOWN',
     'QTOWN'
-  ];
-  const DUNEDIN = [
+];
+export const DUNEDIN = [
     'Dunedin',
     'DUNEDIN'
-  ];
-  const OTHER_NZ = [
+];
+export const OTHER_NZ = [
     'Other - New Zealand',
     'OTHER - NEW ZEALAND',
     'OTHER - NZ',
     'UNKNOWN_NZ'
-  ];
+];
 
-  const NEWZEALAND = [
+export const NEW_ZEALAND = [
     AUCKLAND,
     HAMILTON,
     TAURANGA,
@@ -119,46 +118,46 @@ const AUCKLAND = [
     QUEENSTOWN,
     DUNEDIN,
     OTHER_NZ
-  ];
-  
-const LONDON = [
+];
+
+export const LONDON = [
     'London',
     'LONDON'
 ];
-const MANCHESTER = [
+export const MANCHESTER = [
     'Manchester',
     'MANCHESTER'
 ];
-const LIVERPOOL = [
+export const LIVERPOOL = [
     'Liverpool',
     'LIVERPOOL'
 ];
-const BRISTOL = [
+export const BRISTOL = [
     'Bristol',
     'BRISTOL'
 ];
-const GLASGOW = [
+export const GLASGOW = [
     'Glasgow',
     'GLASGOW'
 ];
-const EDINBURGH = [
+export const EDINBURGH = [
     'Edinburgh',
     'EDINBURGH'
 ];
-const CARDIFF = [
+export const CARDIFF = [
     'Cardiff',
     'CARDIFF'
 ];
-const BELFAST = [
+export const BELFAST = [
     'Belfast',
     'BELFAST'
 ];
-const OTHER_UK = [
+export const OTHER_UK = [
     'Other - UK',
     'OTHER - UK',
     'UNKNOWN_UK'
-]
-const UNITED_KINGDOM = [
+];
+export const UNITED_KINGDOM = [
     LONDON,
     MANCHESTER,
     LIVERPOOL,
@@ -168,9 +167,9 @@ const UNITED_KINGDOM = [
     CARDIFF,
     BELFAST,
     OTHER_UK
-]
+];
 
-const WORKSTYLE_REMOTE = [
+export const WORKSTYLE_REMOTE = [
     "Remote",
     "REMOTE",
     "OFF-SITE",
@@ -178,65 +177,63 @@ const WORKSTYLE_REMOTE = [
     "FROM HOME",
     "INTERNATIONAL",
     "ABROAD"
-]
-const WORKSTYLE_OFFICE = [
+];
+export const WORKSTYLE_OFFICE = [
     "Office",
     "OFFICE",
     "ON SITE",
     "ON-SITE"
-]
-const WORKSTYLE_HYBRID = [
+];
+export const WORKSTYLE_HYBRID = [
     "Hybrid",
     "HYBRID",
     "FLEXIBLE"
-]
-const WORKSTYLES = [
+];
+export const WORKSTYLES = [
     WORKSTYLE_REMOTE,
     WORKSTYLE_OFFICE,
     WORKSTYLE_HYBRID
-]
+];
 
-const LOCATIONS = [
+export const LOCATIONS = [
     ...WORKSTYLE_REMOTE,
     ...AUSTRALIA,
     ...UNITED_KINGDOM,
     ...NEW_ZEALAND,
-]
+];
 
-const SEN_GRAD = [
+export const SEN_GRAD = [
     "Entry-level/graduate",
     "ENTRY"
-]
-const SEN_JUNIOR = [
+];
+export const SEN_JUNIOR = [
     "Junior (1-2 years)",
     "1-2 YEARS"
-]
-const SEN_MID = [
+];
+export const SEN_MID = [
     "Mid-level (3-4 years)",
     "INTERMEDIATE",
     "3-4 years"
-]
-const SEN_SENIOR = [
+];
+export const SEN_SENIOR = [
     "Senior (5-8 years)",
     "SENIOR",
     '5+ YEARS'
-]
-const SEN_EXPERT =[
+];
+export const SEN_EXPERT =[
     "Expert & Leadership (9+ years)",
     "EXPERT",
     '9+ YEARS'
-]
-const SENIORITYS = [
+];
+export const SENIORITYS = [
     SEN_GRAD,
     SEN_JUNIOR,
     SEN_MID,
     SEN_SENIOR,
     SEN_EXPERT
-]
+];
 
-
-
-const WORKTYPE_FULLTIME = [
+export const WORKTYPE_FULLTIME = [
     "Full-time",
     "FULL-TIME PERMANENT",
     "FULL-TIME",
@@ -244,56 +241,56 @@ const WORKTYPE_FULLTIME = [
     "FULLTIME",
     "FULL",
     "FT"
-]
-const WORKTYPE_PARTTIME = [
+];
+export const WORKTYPE_PARTTIME = [
     "Part-time",
     "PART-TIME",
     "PART TIME",
     "PARTTIME",
     "PART",
     "PT",
-]
-const WORKTYPE_CONTRACT = [
+];
+export const WORKTYPE_CONTRACT = [
     "Contract",
     "CONTRACT",
     "CONTRACTUAL"
-]
-const WORKTYPE_FRACTIONAL = [
+];
+export const WORKTYPE_FRACTIONAL = [
     "Fractional",
     "FRACTIONAL"
-]
-const WORKTYPES = [
+];
+export const WORKTYPES = [
     WORKTYPE_FULLTIME,
     WORKTYPE_PARTTIME,
     WORKTYPE_CONTRACT,
     WORKTYPE_FRACTIONAL
-]
+];
 
-const TIMING_ASAP = [
+export const TIMING_ASAP = [
     'As soon as possible'
-]
-const TIMING_SIX_MONTHS = [
+];
+export const TIMING_SIX_MONTHS = [
     '3-6 months',
     'MONTHS',
     '3',
     '4',
     '5',
     '6'
-]
-const TIMING_ONE_YEAR = [
+];
+export const TIMING_ONE_YEAR = [
     'Within the next year'
-]
-const TIMING_CURIOUS = [
+];
+export const TIMING_CURIOUS = [
     'Just curious'
-]
-const TIMING = [
+];
+export const TIMING = [
     TIMING_ASAP,
     TIMING_SIX_MONTHS,
     TIMING_ONE_YEAR,
     TIMING_CURIOUS
-]
+];
 
-const AREAS_SOFTWARE = [
+export const AREAS_SOFTWARE = [
     'Software Engineering',
     'SOFTWARE ENGINEERING',
     'SOFTWARE',
@@ -303,36 +300,36 @@ const AREAS_SOFTWARE = [
     'PROGRAMMER',
     'NODE.JS',
     'PYTHON'
-]
-const AREAS_DATA = [
+];
+export const AREAS_DATA = [
     'Data',
     'DATA'
-]
-const AREAS_ENGINEERING = [
+];
+export const AREAS_ENGINEERING = [
     'Other Engineering'
-]
-const AREAS_PRODUCT = [
+];
+export const AREAS_PRODUCT = [
     'Product'
-]
-const AREAS_DESIGN = [
+];
+export const AREAS_DESIGN = [
     'Design',
-]
-const AREAS_OPS = [
+];
+export const AREAS_OPS = [
     'Operations & Strategy'
-]
-const AREAS_SALES = [
+];
+export const AREAS_SALES = [
     'Sales & Account Management'
-]
-const AREAS_MARKETING = [
+];
+export const AREAS_MARKETING = [
     'Marketing'
-]
-const AREAS_HR = [
+];
+export const AREAS_HR = [
     'People, HR, Recruitment'
-]
-const AREAS_FIN_LEGAL = [
+];
+export const AREAS_FIN_LEGAL = [
     'Finance, Legal & Compliance'
-]
-const BUSINESS_AREAS = [
+];
+export const BUSINESS_AREAS = [
     AREAS_SOFTWARE,
     AREAS_DATA,
     AREAS_ENGINEERING,
@@ -343,9 +340,4 @@ const BUSINESS_AREAS = [
     AREAS_MARKETING,
     AREAS_HR,
     AREAS_FIN_LEGAL
-]
-
-module.exports = { WORKTYPES, WORKSTYLES, SENIORITYS, LOCATIONS, TIMING, BUSINESS_AREAS }
-
-
-
+];

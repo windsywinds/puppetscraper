@@ -2,10 +2,11 @@
   "name": "job-board-scraper",
   "version": "1.0.0",
   "description": "Create a job to capture job postings",
-  "main": "index.js",
+  "main": "index.mjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "workable": "node local.js https://apply.workable.com/auror",
+    "workable": "node index.js https://apply.workable.com/auror",
     "prettier": "prettier . --write"
   },
   "author": "Google LLC",

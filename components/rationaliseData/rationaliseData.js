@@ -1,4 +1,5 @@
-import { WORKTYPES, WORKSTYLES, SENIORITYS, LOCATIONS, TIMING, BUSINESS_AREAS } from './keywords';
+import { WORKTYPES, WORKSTYLES, SENIORITYS, LOCATIONS, TIMING, BUSINESS_AREAS } from './keywords.js';
+
 
 async function dataRationaliser(jobListing) {
     const rationalisedData = {};
